@@ -68,7 +68,7 @@ Get a PostgreSQL database running with
 After Get It Running, using Chrome postman, you can perform a POST request to http://localhost:5000/request
 with body -> form-data and
 form entries:
-service: FloatComputation
-payload: payload_float_add.tar.gz
+- service: FloatComputation
+- payload: payload_float_add.tar.gz
 
 Get the result at http://host:5000/result/id&token
