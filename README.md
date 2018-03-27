@@ -72,3 +72,6 @@ form entries:
 - payload: payload_float_add.tar.gz
 
 Get the result at http://host:5000/result/id&token
+
+## What about these messy (non-JSON) text responses
+Yes, we should reorganize that.
