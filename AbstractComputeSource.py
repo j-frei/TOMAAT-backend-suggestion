@@ -9,15 +9,21 @@ class InferenceWorker():
     def __init__(self,usedComputeSourceClass):
         self.cs = usedComputeSourceClass
         self.classMapping = { t.task_identifier:t for t in self.cs.supported_tasks}
+        self.working = None
 
-    def start(self,task_queue):
+    def start(self,task_queue, state):
         import DB
         self.cs.initialize()
+        self.working = state
 
         while True:
+            self.working.value = False
             id = task_queue.get()
+            # set state to working
+            self.working.value = True
             properties = DB.getRowByID(id)
             servicetype = properties['servicetype']
+
             data_dir = os.path.join(TOMAATSettings.BASE_STORAGE_DIR,str(id))
 
             print("Check input of Task with ID {} type: {}".format(id, servicetype))

@@ -7,6 +7,7 @@ class AbstractTask(ABC):
     task_identifier = ""
     description = "No description"
     inputs = []
+    shared = {}
 
     def __init__(self,id : int,data_dir : str):
         self.id = id

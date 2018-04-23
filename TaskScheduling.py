@@ -1,7 +1,8 @@
 import TOMAATSettings
 from multiprocessing.managers import BaseManager
 import multiprocessing as mp
-from multiprocessing import Queue, Process
+from multiprocessing import Queue, Process, Value
+from ctypes import c_bool
 from AbstractComputeSource import InferenceWorker
 
 
@@ -32,6 +33,7 @@ class TaskScheduler(object):
         self.workers = []
         self.workerProcesses = []
         self.workerQueues = []
+        self.workerStates = []
 
 
     def startComputeProcesses(self):
@@ -39,9 +41,11 @@ class TaskScheduler(object):
         self.workers = [InferenceWorker(usedComputeSourceClass=cs) for cs in self.computeSources]
         for w in self.workers:
             q = Queue()
-            p = Process(target=w.start,args=(q,))
+            state = Value(c_bool,False,lock=False)
+            p = Process(target=w.start,args=(q,state))
             self.workerProcesses.append(p)
             self.workerQueues.append(q)
+            self.workerStates.append(state)
 
         for wp in self.workerProcesses:
             wp.start()
@@ -58,13 +62,14 @@ class TaskScheduler(object):
             capableComputeSources = self.computeSourceIndexByTask.get(servicetype,[])
 
             # Should not happen as the check is already performed at the incoming request
-            if len(capableComputeSources):
+            if len(capableComputeSources) == 0:
                 print("No capable device available!")
 
-            queuesOfCapableSources = [ (i,self.workerQueues[i]) for i in capableComputeSources]
+            # [(index_0,queueObject_0,stateObject_0), (index_1,...), ...]
+            queuesOfCapableSources = [ (i,self.workerQueues[i],self.workerStates[i]) for i in capableComputeSources]
 
-            # select compute source with shorted queue
-            (selectedComputeSourceIndex,_),*_ = sorted(queuesOfCapableSources, reverse=False, key=lambda obj: obj[1].qsize())
+            # select compute source with shortest queue and idle state
+            (selectedComputeSourceIndex,_,_),*_ = sorted(queuesOfCapableSources, reverse=False, key=lambda obj: obj[1].qsize()+int(bool(obj[2].value)))
 
             print("Dispatch task id {} with task {} in queue of compute source index {}.".format(task_id,servicetype,selectedComputeSourceIndex))
             self.workerQueues[selectedComputeSourceIndex].put(task_id)

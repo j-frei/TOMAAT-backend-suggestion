@@ -22,7 +22,7 @@ registeredComputeSources = [
 sqlDBString = 'postgres://tomaat-user:tomaat-password@localhost:5432/tomaat'
 
 # Storage setup
-BASE_STORAGE_DIR = '/home/jfrei/test'
+BASE_STORAGE_DIR = '/tmp/tomaat'
 StorageStrategy = StorageChoices.KEEP_NOTHING
 
 
